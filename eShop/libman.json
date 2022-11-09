@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "vue@3.2.41",
+      "destination": "wwwroot/lib/vue/"
+    },
+    {
+      "library": "axios@1.1.3",
+      "destination": "wwwroot/lib/axios/"
+    },
+    {
+      "library": "font-awesome@6.2.0",
+      "destination": "wwwroot/lib/font-awesome/"
+    },
+    {
+      "library": "awesome-notifications@3.1.3",
+      "destination": "wwwroot/lib/awesome-notifications/"
+    },
+    {
+      "library": "jquery@3.6.1",
+      "destination": "wwwroot/lib/jquery/"
+    },
+    {
+      "library": "jqueryui@1.13.2",
+      "destination": "wwwroot/lib/jqueryui/"
+    },
+    {
+      "library": "elfinder@2.1.61",
+      "destination": "wwwroot/lib/elfinder/"
+    }
+  ]
+}

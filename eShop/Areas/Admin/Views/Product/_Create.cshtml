@@ -1,0 +1,40 @@
+﻿<div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{action}} sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="mt-2">
+                        <label class="control-label">Tên danh mục</label>
+                        <input class="form-control" v-model="productData.name" />
+
+                        <label class="control-label">Giá</label>
+                        <input class="form-control" v-model="productData.price" />
+
+                        <label class="control-label">Giảm</label>
+                        <input class="form-control" v-model="productData.discountPrice" />
+
+                        <label class="control-label">Số lượng</label>
+                        <input class="form-control" v-model="productData.inStock" />
+
+                        <label class="control-label">Danh mục</label>
+
+                        <vc:select-list-category v-model="productData.categoryId">
+
+                        </vc:select-list-category>
+
+
+                        <input class="form-control" v-model="productData.categoryName" />
+                    </div>
+                    <div class="mt-2">
+                        <input v-on:click="addOrUpdateproductData()" type="button" :value="action" class="btn btn-primary" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

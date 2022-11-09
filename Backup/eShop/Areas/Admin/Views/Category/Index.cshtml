@@ -1,0 +1,109 @@
+﻿@using eShop.Areas.Admin.ViewModels.Category
+@model IEnumerable<ListItemCategoryVM>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+@if (TempData["Err"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Err"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div id="tblCate">
+
+    <p>
+        <a v-on:click="showCreateModal()">Create New</a>
+    </p>
+    <button class="btn btn-info my-3" @@click="refreshData()">Làm mới dữ liệu</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên danh mục</th>
+                <th>Tạo lúc</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="cate in categories">
+                <td>{{cate.id}}</td>
+                <td>{{cate.name}}</td>
+                <td>{{new Date(cate.createdAt).toLocaleString()}}</td>
+                <td>
+                    <button :href="'/Admin/Category/Update/' + cate.id">Sửa</button>
+                    <button class="btn btn-warning" v-on:click="deleteCategory(cate.id)">Xóa</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <partial name="_Create" />
+</div>
+
+
+@section Scripts{
+
+    <script>
+
+        let noti = new AWN();
+        let mCreate = new bootstrap.Modal("#modalCreate");
+        Vue.createApp({
+            data() {
+                return {
+                    categories: [],
+                    cateData: {
+                        id: null,
+                        name: null,
+                    }
+                }
+            },
+
+            methods: {
+                showCreateModal() {
+                    mCreate.show();
+                },
+                deleteCategory(id) {
+                    noti.confirm(
+                        "Xac nhan xoa?",
+                        () => {
+                            noti.async(
+                                axios.get("/Admin/Category/Delete/" + id),
+                                (response) => {
+                                    var data = response.data;
+                                    if (data.success) {
+                                        noti.success("Xoa thanh cong");
+                                        this.refreshData();
+                                    } else {
+                                        noti.warning(data.mesg);
+                                    };
+                                })
+                        });
+                },
+                refreshData() {
+                    noti.asyncBlock(
+                        // lệnh gọi ajax
+                        axios.get("/Admin/Category/GetAll"),
+                        // xử lý khi thành công,k
+                        (response) => {
+                            this.categories = response.data;
+                            noti.success("Tải dữ liệu danh mục thành công");
+                        },
+                        // xử lý khi thất bại
+                        (err) => {
+                            console.log(err);
+                        },
+                        "Chờ tí"
+                    );
+                }
+            },
+            mounted() {
+                this.refreshData();
+            }
+        }).mount("body");
+    </script>
+}

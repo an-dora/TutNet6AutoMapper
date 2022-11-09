@@ -1,0 +1,168 @@
+﻿<h1>Index Category</h1>
+<div id="tblCate">
+
+    <p>
+        <button class="btn btn-primary me-1" v-on:click="showModalForAdd()">Create New</button>
+    </p>
+    <button class="btn btn-info my-3" @@click="refreshData()">Làm mới dữ liệu</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên danh mục</th>
+                <th>Tạo lúc</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="cate in categories">
+                <td>{{cate.id}}</td>
+                <td>{{cate.name}}</td>
+                <td>{{new Date(cate.createdAt).toLocaleString()}}</td>
+                <td>
+                    <button class="btn btn-primary" v-on:click="getDataForUpdate(cate.id)">Sửa</button>
+                    <button class="btn btn-danger" v-on:click="deleteCategory(cate.id)">Xóa</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            <li v-for="p in pager" class="page-item" v-bind:class="{active: p.isCurrenPage}">
+            <a class="page-link" href="#" v-on:click.prevent="refreshData(p.page)" v-html="p.text"></a>
+            </li>
+        </ul>
+    </nav>
+
+    <partial name="_Create" />
+</div>
+
+
+@section Scripts{
+    <script src="~/js/admin/pager.js"></script>
+    <script>
+        //const { axios } = require("../../../../wwwroot/lib/axios/axios");
+        option = {
+            minDurations: {
+                "async block": 300,
+                "async": 300
+            }
+        }
+
+        let noti = new AWN();
+        Vue.createApp({
+            data() {
+                return {
+                    action: '',
+                    mCreate: {},
+                    categories: [],
+                    cateData: {
+                        id: 0,
+                        name: null,
+                    },
+                    pager: []
+                }
+            },
+            methods: {
+                refreshData() {
+                    noti.asyncBlock(
+                        // lệnh gọi ajax
+                        axios.get("/Admin/Category/GetAll?page="+page),
+                        // xử lý khi thành công,k
+                        (response) => {
+                            this.categories = response.data.items;
+                            var metadata = response.data.metadata;
+                            this.pager = Page.create(metadata.pageNumber, metadata.pageSize, metadata.totalItemCount);
+                        },
+                        // xử lý khi thất bại
+                        (err) => {
+                            console.log(err);
+                        },
+                        "Chờ tí"
+                    );
+                },
+                clearData() {
+                    this.cateData.name = "";
+                    this.cateData.id = 0;
+                },
+                showModalForAdd() {
+                    this.action = "New";
+                    this.clearData();
+                    this.mCreate.show();
+                },
+                addOrUpdateCateData() {
+                    if (!this.cateData.name) {
+                        noti.warning("Name null!");
+                        return;
+                    }
+                    let url = "/Admin/Category/Create";
+                    if (this.cateData.id != 0) {
+                        url = "/Admin/Category/Update/" + this.cateData.id;
+                    }
+                    noti.async(
+                        axios.post(url, this.cateData),
+                        (response) => {
+                            if (response.data.success) {
+                                noti.success(this.action + " thanh cong");
+                                this.mCreate.hide();
+                                this.clearData();
+                                this.refreshData();
+                            }
+
+                        },
+                        (err) => {
+                            let statusCode = err.response.status;
+
+                            if (statusCode == 400) {
+                                var errRes = err.response.data;
+
+                                for (let prop in errRes) {
+                                    for (let mesg of errRes[prop]) {
+                                        noti.alert(mesg);
+                                        retrun;
+                                    }
+                                }
+                            }
+                        }
+                    );
+                },
+
+                deleteCategory(id) {
+                    noti.confirm(
+                        "Xac nhan xoa?",
+                        () => {
+                            noti.async(
+                                axios.get("/Admin/Category/Delete/" + id),
+                                (response) => {
+                                    var data = response.data;
+                                    if (data.success) {
+                                        noti.success("Xoa thanh cong");
+                                        this.refreshData();
+                                    } else {
+                                        noti.warning(data.mesg);
+                                    };
+                                })
+                        });
+                },
+
+                getDataForUpdate(id) {
+                    noti.async(
+                        axios.get("/Admin/Category/Detail/" + id),
+                        (response) => {
+                            var data = response.data;
+                            console.log(data);
+                            this.action = "Uptade";
+                            this.cateData = { ...data };
+                            this.mCreate.show();
+                        })
+                },
+            },
+
+            mounted() {
+                this.refreshData();
+                this.mCreate = new bootstrap.Modal("#modalCreate")
+            }
+        }).mount("#tblCate");
+    </script>
+}

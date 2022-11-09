@@ -1,0 +1,187 @@
+﻿
+<h1>Index Product</h1>
+<div id="product">
+    <p>
+        <button class="btn btn-primary me-1" v-on:click="showModalForAdd()">Create New</button>
+    </p>
+    <button class="btn btn-info my-3" @@click="refreshData()">Làm mới dữ liệu</button>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Price
+                </th>
+                <th>
+                    DiscountPrice
+                </th>
+                <th>
+                    InStock
+                </th>
+                <th>
+                    CategoryName
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="item in products">
+                <td>
+                    {{item.name}}
+                </td>
+                <td>
+                    {{item.price}}
+                </td>
+                <td>
+                    {{item.discountPrice}}
+                </td>
+                <td>
+                    {{item.inStock}}
+                </td>
+                <td>
+                    {{item.categoryName}}
+                </td>
+                <td>
+                    <button class="btn btn-primary" v-on:click="getDataForUpdate(item.id)">Sửa</button>
+                    <button class="btn btn-danger" v-on:click="deleteCategory(item.id)">Xóa</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <partial name="_Create" />
+</div>
+
+
+
+@section Scripts{
+    <script>
+        let noti = new AWN();
+        Vue.createApp({
+            data() {
+                return {
+                    action: '',
+                    mCreate: {},
+                    products: [],
+                    categories: [],
+                    productData: {
+                        id: 0,
+                        name: null,
+                        price: 0,
+                        discountPrice: 0,
+                        inStock: 0,
+                        categoryName: null
+                    }
+                }
+            },
+            methods: {
+                //refresh() {
+                //    avios.get("//Admin/Product/GetAll")
+                //        .then(res => {
+                //            var data = res.data;
+                //            this.productData = { ...data };
+                //        })
+                //        .catch(err => {
+
+                //        });
+                //},
+                clearData() {
+                    this.productData.id = 0;
+                    this.productData.name = null;
+                    this.productData.price = 0;
+                    this.productData.discountPrice = 0;
+                    this.productData.inStock = 0;
+                    this.productData.categoryName = null;
+                },
+                showModalForAdd() {
+                    this.action = "New";
+                    this.clearData();
+                    this.mCreate.show();
+                },
+                refreshData() {
+                    noti.asyncBlock(
+                        axios.get("/Admin/Product/GetAll"),
+                        (response) => {
+                            this.products = response.data;
+                            noti.success("Tải dữ liệu danh mục thành công");
+                        },
+                        (err) => {
+                            console.log(err);
+                        },
+                        "Chờ tí"
+                    );
+                },
+                addOrUpdateproductData() {
+                    if (!this.productData.name) {
+                        noti.warning("Name null!");
+                        return;
+                    }
+                    let url = "/Admin/Product/Create";
+                    if (this.productData.id != 0) {
+                        url = "/Admin/Product/Update/" + this.productData.id;
+                    }
+                    noti.async(
+                        axios.post(url, this.productData),
+                        (response) => {
+                            if (response.data.success) {
+                                noti.success(this.action + " thanh cong");
+                                this.mCreate.hide();
+                                this.clearData();
+                                this.refreshData();
+                            }
+
+                        },
+                        (err) => {
+                            let statusCode = err.response.status;
+
+                            if (statusCode == 400) {
+                                var errRes = err.response.data;
+
+                                for (let prop in errRes) {
+                                    for (let mesg of errRes[prop]) {
+                                        noti.alert(mesg);
+                                        retrun;
+                                    }
+                                }
+                            }
+                        }
+                    );
+                },
+                deleteCategory(id) {
+                    noti.confirm(
+                        "Xac nhan xoa?",
+                        () => {
+                            noti.async(
+                                axios.get("/Admin/Product/Delete/" + id),
+                                (response) => {
+                                    var data = response.data;
+                                    if (data.success) {
+                                        noti.success("Xoa thanh cong");
+                                        this.refreshData();
+                                    } else {
+                                        noti.warning(data.mesg);
+                                    };
+                                })
+                        });
+                },
+
+                getDataForUpdate(id) {
+                    noti.async(
+                        axios.get("/Admin/Product/Detail/" + id),
+                        (response) => {
+                            var data = response.data;
+                            this.action = "Uptade";
+                            this.productData = { ...data };
+                            this.mCreate.show();
+                        })
+                },
+            },
+            mounted() {
+                this.refreshData();
+                this.mCreate = new bootstrap.Modal("#modalCreate")
+            }
+        }).mount("#product");
+    </script>
+}
